@@ -13,12 +13,13 @@
   };
 
   const buildFilters = () => {
-    fillSelect($('f-sup'), [...new Set(state.prog.map((r) => r.supervisor))].sort());
+    fillSelect($('f-sup'), [...[...new Set(state.prog.map((r) => r.supervisor))].sort(), CONFIG.SUP_FIXO]);
     fillSelect($('f-utep'), [...new Set(state.prog.map((r) => r.utep))].sort());
   };
 
   const filtered = () => {
-    const sup = $('f-sup').value;
+    // Supervisor fixo não existe na coluna B: filtra só por UTEP
+    const sup = $('f-sup').value === CONFIG.SUP_FIXO ? '' : $('f-sup').value;
     const utep = $('f-utep').value;
     return state.prog.filter(
       (r) => (!sup || r.supervisor === sup) && (!utep || r.utep === utep)
@@ -30,7 +31,7 @@
     Charts.renderFaturamento(rows);
     Charts.renderAndamento(rows);
     Charts.renderFechamento(rows, state.fech, state.fechMode);
-    Charts.renderSupervisores(rows);
+    Charts.renderSupervisores(rows, state.fech, $('f-sup').value);
     Charts.renderUtep(rows);
     Charts.renderPostes(rows);
   };

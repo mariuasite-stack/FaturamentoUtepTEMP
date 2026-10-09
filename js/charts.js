@@ -181,7 +181,7 @@ const Charts = (() => {
     document.querySelectorAll('#sup-dots button').forEach((b, j) => b.classList.toggle('active', j === supIndex));
   };
 
-  const renderSupervisores = (rows) => {
+  const renderSupervisores = (rows, fechMap, supFilter = '') => {
     const bySup = new Map();
     rows.forEach((r) => {
       if (!bySup.has(r.supervisor)) bySup.set(r.supervisor, []);
@@ -195,10 +195,29 @@ const Charts = (() => {
         <div class="mini-bar"><div style="width:${Math.min(p, 100)}%;background:${color}"></div></div>
       </div>`;
     };
-    const entries = [...bySup.entries()].sort((a, b) => b[1].length - a[1].length);
+    // Supervisor fixo: obras energizadas que constam no fechamento, faturamento = coluna AB (linha viva)
+    const ircCard = (i) => {
+      const base = rows.filter((r) => r.energizada && fechMap.has(r.obra));
+      const com = base.filter((r) => fechMap.get(r.obra).linhaViva > 0);
+      const sup = CONFIG.SUP_FIXO;
+      return `<div class="sup-card ${i % 2 ? 'alt' : ''}">
+          <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>${base.length} obras energizadas no fechamento</small></div></div>
+          <div class="sup-metrics">
+            ${metric('Obras linha viva', com.length, base.length, fmtInt, K.cyan)}
+            <div class="sup-metric">
+              <div class="sup-metric-head"><span>Faturamento linha viva</span></div>
+              <div class="sup-metric-val"><b>${fmtBRL(sum(com, (r) => fechMap.get(r.obra).linhaViva))}</b></div>
+            </div>
+          </div>
+        </div>`;
+    };
+    const isFixo = supFilter === CONFIG.SUP_FIXO;
+    const entries = isFixo ? [] : [...bySup.entries()].sort((a, b) => b[1].length - a[1].length);
+    if (!supFilter || isFixo) entries.push([CONFIG.SUP_FIXO, null]);
     supCount = entries.length;
     document.getElementById('sup-track').innerHTML = entries
       .map(([sup, list], i) => {
+        if (!list) return ircCard(i);
         const en = list.filter((r) => r.energizada);
         return `<div class="sup-card ${i % 2 ? 'alt' : ''}">
           <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>${list.length} obras programadas</small></div></div>

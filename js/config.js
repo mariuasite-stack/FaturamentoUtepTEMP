@@ -11,7 +11,10 @@ const CONFIG = {
 
   // Fechamento: pula 1 linha, a 2ª é header
   FECH_SKIP: 2,
-  FECH: { OBRA: 2, PENDENCIA: 30, GEOEX: 35 },
+  FECH: { OBRA: 2, LINHA_VIVA: 27, PENDENCIA: 30, GEOEX: 35 },
+
+  // Supervisor fixo (não vem da coluna B): obras/faturamento via coluna AB do fechamento
+  SUP_FIXO: 'GABRIEL-IRC',
 
   COLORS: {
     cyan: '#00e5ff',
