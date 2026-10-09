@@ -58,8 +58,8 @@ body {
 .brand { display: flex; align-items: center; gap: 16px; }
 .brand h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
 .brand small { font-size: 12px; }
-.brand-logo { height: 58px; width: auto; display: block; }
-.brand-sep { width: 1px; height: 40px; background: var(--border); }
+.brand-logo { height: 31px; width: auto; max-width: 120px; display: block; opacity: .95; }
+.brand-sep { width: 1px; height: 30px; background: var(--border); }
 
 .filters {
   display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
