@@ -3,12 +3,9 @@ const Charts = (() => {
   const K = CONFIG.COLORS;
   const instances = {};
 
-  const fmtBRL = (v) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 });
-  const fmtBRLshort = (v) => {
-    if (Math.abs(v) >= 1e6) return 'R$ ' + (v / 1e6).toLocaleString('pt-BR', { maximumFractionDigits: 2 }) + ' mi';
-    if (Math.abs(v) >= 1e3) return 'R$ ' + (v / 1e3).toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' mil';
-    return fmtBRL(v);
-  };
+  // Valores sempre completos com centavos: R$ 1.111.111,00 / R$ 11.111,00
+  const fmtBRL = (v) =>
+    v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const fmtInt = (v) => Math.round(v).toLocaleString('pt-BR');
   const pct = (a, b) => (b > 0 ? (a / b) * 100 : 0);
   const fmtPct = (v) => v.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + '%';
@@ -243,7 +240,7 @@ const Charts = (() => {
         indexAxis: 'y',
         maintainAspectRatio: false,
         scales: {
-          x: { stacked: true, beginAtZero: true, ticks: { callback: (v) => fmtBRLshort(v) }, grid: { color: K.grid } },
+          x: { stacked: true, beginAtZero: true, ticks: { callback: (v) => fmtBRL(v), maxTicksLimit: 5 }, grid: { color: K.grid } },
           y: { stacked: true, grid: { display: false }, ticks: { color: K.text, font: { weight: 600 } } },
         },
         plugins: {
