@@ -26,7 +26,8 @@ const Data = (() => {
 
   const normKey = (v) => String(v ?? '').trim().toUpperCase();
 
-  const isEnergizada = (anotacao) => normKey(anotacao).includes('ENERGIZADA');
+  // Status da coluna J exatamente "ENERGIZADA" (ignora espaços/maiúsculas)
+  const isEnergizada = (anotacao) => normKey(anotacao) === 'ENERGIZADA';
 
   const fetchCSV = async (url) => {
     const res = await fetch(url, { cache: 'no-store' });
@@ -54,7 +55,7 @@ const Data = (() => {
       }));
   };
 
-  // Map obra -> status GEOEX
+  // Map obra -> { status (GEOEX, col. AJ), pendencias (col. AE, separadas por vírgula) }
   const loadFechamento = async () => {
     const C = CONFIG.FECH;
     const rows = (await fetchCSV(CONFIG.URL_FECHAMENTO)).slice(CONFIG.FECH_SKIP);
@@ -62,9 +63,14 @@ const Data = (() => {
     rows.forEach((r) => {
       const k = normKey(r[C.OBRA]);
       if (!k) return;
-      const st = String(r[C.GEOEX] ?? '').trim();
-      // Mantém o primeiro status não vazio encontrado
-      if (!map.has(k) || (!map.get(k) && st)) map.set(k, st);
+      const status = String(r[C.GEOEX] ?? '').trim();
+      const pendencias = String(r[C.PENDENCIA] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
+      const cur = map.get(k);
+      if (!cur) map.set(k, { status, pendencias });
+      else {
+        if (!cur.status && status) cur.status = status;
+        pendencias.forEach((x) => { if (!cur.pendencias.includes(x)) cur.pendencias.push(x); });
+      }
     });
     return map;
   };

@@ -38,18 +38,24 @@ const Charts = (() => {
     const p = pct(exec, prev);
     document.getElementById('fat-prev').textContent = fmtBRL(prev);
     document.getElementById('fat-exec').textContent = fmtBRL(exec);
-    document.getElementById('fat-pct').textContent = fmtPct(p);
+    // < 20% vermelho · 20–60% laranja · > 60% verde
+    const level = p < 20 ? 'low' : p <= 60 ? 'mid' : 'high';
+    const pctEl = document.getElementById('fat-pct');
+    pctEl.textContent = fmtPct(p);
+    pctEl.dataset.level = level;
     document.getElementById('fat-rest').textContent = fmtBRL(Math.max(prev - exec, 0));
     const bar = document.getElementById('fat-bar');
+    bar.dataset.level = level;
     bar.style.width = '0%';
     requestAnimationFrame(() => requestAnimationFrame(() => (bar.style.width = Math.min(p, 100) + '%')));
   };
 
-  // 2. Andamento de obras (por data de início/término)
+  // 2. Andamento de obras
+  // Energizada = status da coluna J; demais pela data de início
+  // (antes do início = Programada; a partir do início = Em execução).
   const statusObra = (r, today) => {
-    if (!r.inicio || !r.termino) return null;
-    if (today < r.inicio) return 'Programada';
-    if (today >= r.termino) return 'Energizada';
+    if (r.energizada) return 'Energizada';
+    if (!r.inicio || today < r.inicio) return 'Programada';
     return 'Em execução';
   };
 
@@ -102,19 +108,48 @@ const Charts = (() => {
     });
   };
 
-  // 3. Obras energizadas x status no fechamento (GEOEX)
-  const renderFechamento = (rows, fechMap) => {
-    const cats = ['ACEITA NEOEX', 'POSTADO NEOEX', 'NÃO POSTADA'];
-    const colors = [K.cyan, K.orange, K.greyLight];
-    const groups = Object.fromEntries(cats.map((c) => [c, []]));
-    rows.filter((r) => r.energizada).forEach((r) => {
-      const st = (fechMap.get(r.obra) || '').toLowerCase();
-      const cat = st === 'postado' ? 'POSTADO NEOEX' : st === 'aceita' ? 'ACEITA NEOEX' : 'NÃO POSTADA';
-      groups[cat].push(r.obra);
+  // 3. Obras em fechamento — modo 'status' (GEOEX, col. AJ) ou 'pendencia' (col. AE),
+  //    sempre considerando apenas as obras energizadas
+  const SEM_PEND = 'Sem pendência';
+  const NAO_ENC = 'Não encontrada no fechamento';
+
+  const groupFechamento = (energizadas, fechMap, mode) => {
+    const groups = new Map();
+    const add = (cat, obra) => {
+      if (!groups.has(cat)) groups.set(cat, []);
+      groups.get(cat).push(obra);
+    };
+    energizadas.forEach((r) => {
+      const f = fechMap.get(r.obra);
+      if (mode === 'status') {
+        const st = (f?.status || '').toLowerCase();
+        add(st === 'postado' ? 'POSTADO NEOEX' : st === 'aceita' ? 'ACEITA NEOEX' : 'NÃO POSTADA', r.obra);
+      } else if (!f) add(NAO_ENC, r.obra);
+      else if (!f.pendencias.length) add(SEM_PEND, r.obra);
+      else f.pendencias.forEach((p) => add(p, r.obra));
     });
+    if (mode === 'status') {
+      const cats = ['ACEITA NEOEX', 'POSTADO NEOEX', 'NÃO POSTADA'];
+      const colors = [K.cyan, K.orange, K.greyLight];
+      return cats.map((c, i) => ({ label: c, obras: groups.get(c) || [], color: colors[i] }));
+    }
+    // Pendências reais ordenadas por quantidade; "sem pendência" e "não encontrada" ao final
+    const real = [...groups.entries()].filter(([c]) => c !== SEM_PEND && c !== NAO_ENC).sort((x, y) => y[1].length - x[1].length);
+    const list = real.map(([c, o]) => ({ label: c, obras: o, color: K.orange }));
+    if (groups.has(SEM_PEND)) list.push({ label: SEM_PEND, obras: groups.get(SEM_PEND), color: K.cyan });
+    if (groups.has(NAO_ENC)) list.push({ label: NAO_ENC, obras: groups.get(NAO_ENC), color: K.greyLight });
+    return list;
+  };
+
+  const renderFechamento = (rows, fechMap, mode = 'status') => {
+    const energizadas = rows.filter((r) => r.energizada);
+    const data = groupFechamento(energizadas, fechMap, mode);
     draw('chart-fechamento', {
       type: 'bar',
-      data: { labels: cats, datasets: [{ data: cats.map((c) => groups[c].length), backgroundColor: colors, borderRadius: 6, barPercentage: 0.6 }] },
+      data: {
+        labels: data.map((d) => d.label),
+        datasets: [{ data: data.map((d) => d.obras.length), backgroundColor: data.map((d) => d.color), borderRadius: 6, barPercentage: 0.6, maxBarThickness: 34 }],
+      },
       options: {
         indexAxis: 'y',
         maintainAspectRatio: false,
@@ -124,21 +159,31 @@ const Charts = (() => {
         },
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (c) => ` ${c.raw} obras`, afterLabel: (c) => groups[c.label].slice(0, 12).join('\n') } },
+          tooltip: { callbacks: { label: (c) => ` ${c.raw} obras`, afterLabel: (c) => data[c.dataIndex].obras.slice(0, 12).join('\n') } },
         },
       },
     });
-    const total = sum(cats, (c) => groups[c].length);
-    document.getElementById('fech-total').textContent = `${total} energizadas`;
+    document.getElementById('fech-total').textContent = `${energizadas.length} energizadas`;
     document.getElementById('fech-list').innerHTML =
-      cats
-        .map((c, i) => (groups[c].length
-          ? `<div class="tag-group"><span class="dot" style="background:${colors[i]}"></span><b>${c}</b>${groups[c].map((o) => `<span class="tag">${o}</span>`).join('')}</div>`
+      data
+        .map((d) => (d.obras.length
+          ? `<div class="tag-group"><span class="dot" style="background:${d.color}"></span><b>${d.label}</b>${d.obras.map((o) => `<span class="tag">${o}</span>`).join('')}</div>`
           : ''))
         .join('') || '<span class="muted">Nenhuma obra energizada no filtro atual.</span>';
   };
 
-  // 4. Status por supervisor
+  // 4. Status por supervisor — carrossel, 1 supervisor por vez
+  let supIndex = 0;
+  let supCount = 0;
+
+  const showSupervisor = (i) => {
+    if (!supCount) return;
+    supIndex = (i + supCount) % supCount;
+    document.getElementById('sup-track').style.transform = `translateX(-${supIndex * 100}%)`;
+    document.getElementById('sup-counter').textContent = `${supIndex + 1} / ${supCount}`;
+    document.querySelectorAll('#sup-dots button').forEach((b, j) => b.classList.toggle('active', j === supIndex));
+  };
+
   const renderSupervisores = (rows) => {
     const bySup = new Map();
     rows.forEach((r) => {
@@ -153,22 +198,30 @@ const Charts = (() => {
         <div class="mini-bar"><div style="width:${Math.min(p, 100)}%;background:${color}"></div></div>
       </div>`;
     };
-    const html = [...bySup.entries()]
-      .sort((a, b) => b[1].length - a[1].length)
-      .map(([sup, list]) => {
+    const entries = [...bySup.entries()].sort((a, b) => b[1].length - a[1].length);
+    supCount = entries.length;
+    document.getElementById('sup-track').innerHTML = entries
+      .map(([sup, list], i) => {
         const en = list.filter((r) => r.energizada);
-        return `<div class="sup-card">
-          <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>${list.length} obras</small></div></div>
+        return `<div class="sup-card ${i % 2 ? 'alt' : ''}">
+          <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>${list.length} obras programadas</small></div></div>
           <div class="sup-metrics">
             ${metric('Postes exec / prev', sum(list, (r) => r.posteExec), sum(list, (r) => r.postePrev), fmtInt, K.orange)}
             ${metric('Obras energizadas', en.length, list.length, fmtInt, K.cyan)}
-            ${metric('Faturamento energizado', sum(en, (r) => r.valor), sum(list, (r) => r.valor), fmtBRLshort, K.cyan)}
+            ${metric('Faturamento energizado', sum(en, (r) => r.valor), sum(list, (r) => r.valor), fmtBRL, K.cyan)}
           </div>
         </div>`;
       })
+      .join('') || '<div class="sup-card"><span class="muted">Sem dados.</span></div>';
+    document.getElementById('sup-dots').innerHTML = entries
+      .map(([sup], i) => `<button type="button" title="${sup}" data-i="${i}"></button>`)
       .join('');
-    document.getElementById('supervisores').innerHTML = html || '<span class="muted">Sem dados.</span>';
+    document.querySelectorAll('#sup-dots button').forEach((b) => b.addEventListener('click', () => showSupervisor(+b.dataset.i)));
+    document.querySelectorAll('.sup-arrow').forEach((b) => (b.disabled = supCount < 2));
+    showSupervisor(Math.min(supIndex, Math.max(supCount - 1, 0)));
   };
+
+  const nextSupervisor = (step) => showSupervisor(supIndex + step);
 
   // 5. Faturamento por UTEP (barra horizontal empilhada)
   const renderUtep = (rows) => {
@@ -198,7 +251,7 @@ const Charts = (() => {
             position: 'top',
             align: 'end',
             onClick: null,
-            labels: { generateLabels: () => [...uteps.map((u) => legendItem(`Exec. ${u}`, utepColor(u))), legendItem('Previsto', K.grey)] },
+            labels: { generateLabels: () => [...uteps.map((u) => legendItem(u, utepColor(u))), legendItem('Previsto', K.grey)] },
           },
           tooltip: {
             callbacks: {
@@ -258,5 +311,5 @@ const Charts = (() => {
     });
   };
 
-  return { renderFaturamento, renderAndamento, renderFechamento, renderSupervisores, renderUtep, renderPostes };
+  return { renderFaturamento, renderAndamento, renderFechamento, renderSupervisores, nextSupervisor, renderUtep, renderPostes };
 })();

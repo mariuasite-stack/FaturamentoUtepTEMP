@@ -11,7 +11,7 @@ const CONFIG = {
 
   // Fechamento: pula 1 linha, a 2ª é header
   FECH_SKIP: 2,
-  FECH: { OBRA: 2, GEOEX: 35 },
+  FECH: { OBRA: 2, PENDENCIA: 30, GEOEX: 35 },
 
   COLORS: {
     cyan: '#00e5ff',

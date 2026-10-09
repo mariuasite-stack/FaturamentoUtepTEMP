@@ -1,11 +1,10 @@
 // Orquestração: carga, filtros e renderização
 (() => {
-  const MESES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
-  const FILTERS = ['f-mes', 'f-sup', 'f-utep'];
-  const state = { prog: [], fech: new Map() };
+  // Planilha é a programação de outubro: todas as obras contam para o mês,
+  // inclusive as que iniciaram antes (ex.: setembro).
+  const FILTERS = ['f-sup', 'f-utep'];
+  const state = { prog: [], fech: new Map(), fechMode: 'status' };
   const $ = (id) => document.getElementById(id);
-
-  const monthKey = (d) => (d ? `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}` : '');
 
   const fillSelect = (el, values, labelFn = (v) => v) => {
     const current = el.value;
@@ -14,21 +13,15 @@
   };
 
   const buildFilters = () => {
-    const months = [...new Set(state.prog.map((r) => monthKey(r.inicio)).filter(Boolean))].sort();
-    fillSelect($('f-mes'), months, (k) => {
-      const [y, m] = k.split('-');
-      return `${MESES[+m - 1]}/${y}`;
-    });
     fillSelect($('f-sup'), [...new Set(state.prog.map((r) => r.supervisor))].sort());
     fillSelect($('f-utep'), [...new Set(state.prog.map((r) => r.utep))].sort());
   };
 
   const filtered = () => {
-    const mes = $('f-mes').value;
     const sup = $('f-sup').value;
     const utep = $('f-utep').value;
     return state.prog.filter(
-      (r) => (!mes || monthKey(r.inicio) === mes) && (!sup || r.supervisor === sup) && (!utep || r.utep === utep)
+      (r) => (!sup || r.supervisor === sup) && (!utep || r.utep === utep)
     );
   };
 
@@ -36,7 +29,7 @@
     const rows = filtered();
     Charts.renderFaturamento(rows);
     Charts.renderAndamento(rows);
-    Charts.renderFechamento(rows, state.fech);
+    Charts.renderFechamento(rows, state.fech, state.fechMode);
     Charts.renderSupervisores(rows);
     Charts.renderUtep(rows);
     Charts.renderPostes(rows);
@@ -67,5 +60,22 @@
     render();
   });
   $('refresh').addEventListener('click', load);
+
+  // Alterna o gráfico de fechamento entre Status (col. AJ) e Pendência (col. AE)
+  document.querySelectorAll('.seg button').forEach((b) =>
+    b.addEventListener('click', () => {
+      state.fechMode = b.dataset.mode;
+      document.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('active', x === b));
+      Charts.renderFechamento(filtered(), state.fech, state.fechMode);
+    })
+  );
+
+  $('sup-prev').addEventListener('click', () => Charts.nextSupervisor(-1));
+  $('sup-next').addEventListener('click', () => Charts.nextSupervisor(1));
+  document.addEventListener('keydown', (e) => {
+    if (e.target.closest('select')) return;
+    if (e.key === 'ArrowLeft') Charts.nextSupervisor(-1);
+    if (e.key === 'ArrowRight') Charts.nextSupervisor(1);
+  });
   load();
 })();

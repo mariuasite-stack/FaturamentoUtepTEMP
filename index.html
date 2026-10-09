@@ -20,7 +20,7 @@
         </div>
       </div>
       <div class="filters">
-        <label>Mês<select id="f-mes"><option value="">Todos</option></select></label>
+        <label>Mês<span class="month-fixed">Outubro/2026</span></label>
         <label>Supervisor<select id="f-sup"><option value="">Todos</option></select></label>
         <label>UTEP<select id="f-utep"><option value="">Todos</option></select></label>
         <button id="f-clear" class="btn ghost" title="Limpar filtros">Limpar</button>
@@ -37,6 +37,7 @@
         <span class="big-pct" id="fat-pct">0%</span>
       </div>
       <div class="progress"><div class="progress-fill" id="fat-bar"></div></div>
+      <div class="progress-marks"><span style="left:20%">20%</span><span style="left:60%">60%</span></div>
       <div class="fat-kpis">
         <div><span class="kpi-label"><i class="dot" style="background:var(--cyan)"></i>Executado (energizadas)</span><b id="fat-exec">—</b></div>
         <div><span class="kpi-label"><i class="dot" style="background:var(--grey-light)"></i>Falta faturar</span><b id="fat-rest">—</b></div>
@@ -46,11 +47,20 @@
 
     <div class="grid-2">
       <section class="card">
-        <div class="card-head"><h2>Andamento de Obras</h2><span class="muted small">por data de início / término</span></div>
+        <div class="card-head"><h2>Andamento de Obras</h2><span class="muted small">energizada = coluna J</span></div>
         <div class="chart-box"><canvas id="chart-andamento"></canvas></div>
       </section>
       <section class="card">
-        <div class="card-head"><h2>Obras em Fechamento</h2><span class="pill" id="fech-total">—</span></div>
+        <div class="card-head">
+          <h2>Obras em Fechamento</h2>
+          <div class="head-actions">
+            <span class="pill" id="fech-total">—</span>
+            <div class="seg" role="tablist" aria-label="Visão do fechamento">
+              <button type="button" class="active" data-mode="status">Status</button>
+              <button type="button" data-mode="pendencia">Pendência</button>
+            </div>
+          </div>
+        </div>
         <div class="chart-box short"><canvas id="chart-fechamento"></canvas></div>
         <div id="fech-list" class="tag-list"></div>
       </section>
@@ -58,7 +68,12 @@
 
     <section class="card">
       <div class="card-head"><h2>Status por Supervisor</h2><span class="muted small">postes · obras · faturamento</span></div>
-      <div id="supervisores" class="sup-grid"></div>
+      <div class="sup-carousel">
+        <button type="button" class="sup-arrow" id="sup-prev" aria-label="Supervisor anterior">&#x2039;</button>
+        <div class="sup-viewport"><div id="sup-track" class="sup-track"></div></div>
+        <button type="button" class="sup-arrow" id="sup-next" aria-label="Próximo supervisor">&#x203A;</button>
+      </div>
+      <div class="sup-nav"><div id="sup-dots" class="sup-dots"></div><span id="sup-counter" class="muted small"></span></div>
     </section>
 
     <div class="grid-2">
