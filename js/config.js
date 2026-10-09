@@ -17,13 +17,13 @@ const CONFIG = {
   SUP_FIXO: 'GABRIEL-IRC',
 
   COLORS: {
-    cyan: '#00e5ff',
-    orange: '#ff7a00',
-    grey: '#2a313c',
-    greyLight: '#5b6675',
-    text: '#e6edf3',
-    muted: '#8b98a8',
-    grid: 'rgba(255,255,255,0.06)',
+    cyan: '#00a8cc',
+    orange: '#f26b00',
+    grey: '#d5dbe3',
+    greyLight: '#9aa5b4',
+    text: '#0f172a',
+    muted: '#5b6675',
+    grid: 'rgba(15,23,42,0.07)',
   },
-  UTEP_COLORS: { OESTE: '#ff7a00', NOROESTE: '#00e5ff' },
+  UTEP_COLORS: { OESTE: '#f26b00', NOROESTE: '#00a8cc' },
 };

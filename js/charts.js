@@ -14,8 +14,10 @@ const Charts = (() => {
   Chart.defaults.color = K.muted;
   Chart.defaults.font.family = "'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif";
   Chart.defaults.borderColor = K.grid;
-  Chart.defaults.plugins.tooltip.backgroundColor = '#0b0f14';
-  Chart.defaults.plugins.tooltip.borderColor = 'rgba(255,255,255,0.12)';
+  Chart.defaults.plugins.tooltip.backgroundColor = '#ffffff';
+  Chart.defaults.plugins.tooltip.titleColor = K.text;
+  Chart.defaults.plugins.tooltip.bodyColor = K.text;
+  Chart.defaults.plugins.tooltip.borderColor = 'rgba(15,23,42,0.12)';
   Chart.defaults.plugins.tooltip.borderWidth = 1;
   Chart.defaults.plugins.tooltip.padding = 10;
   Chart.defaults.plugins.legend.labels.usePointStyle = true;
@@ -84,7 +86,7 @@ const Charts = (() => {
     const total = counts.reduce((a, b) => a + b, 0);
     draw('chart-andamento', {
       type: 'doughnut',
-      data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderColor: '#121821', borderWidth: 3, hoverOffset: 6 }] },
+      data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderColor: '#ffffff', borderWidth: 3, hoverOffset: 6 }] },
       options: {
         maintainAspectRatio: false,
         cutout: '70%',
