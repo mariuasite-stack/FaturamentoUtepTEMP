@@ -55,14 +55,11 @@ body {
   gap: 16px;
   flex-wrap: wrap;
 }
-.brand { display: flex; align-items: center; gap: 12px; }
+.brand { display: flex; align-items: center; gap: 16px; }
 .brand h1 { margin: 0; font-size: 20px; font-weight: 800; letter-spacing: -0.02em; }
 .brand small { font-size: 12px; }
-.brand-mark {
-  width: 34px; height: 34px; border-radius: 10px;
-  background: linear-gradient(135deg, var(--cyan), var(--orange));
-  box-shadow: 0 0 24px rgba(0, 229, 255, 0.25);
-}
+.brand-logo { height: 58px; width: auto; display: block; }
+.brand-sep { width: 1px; height: 40px; background: var(--border); }
 
 .filters {
   display: flex; align-items: flex-end; gap: 10px; flex-wrap: wrap;
