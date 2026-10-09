@@ -195,25 +195,28 @@ const Charts = (() => {
         <div class="mini-bar"><div style="width:${Math.min(p, 100)}%;background:${color}"></div></div>
       </div>`;
     };
-    // Supervisor fixo: obras energizadas que constam no fechamento, faturamento = coluna AB (linha viva)
+    // Supervisor fixo: obras da programação de outubro que constam no fechamento com linha viva (coluna AB) > 0
     const ircCard = (i) => {
-      const base = rows.filter((r) => r.energizada && fechMap.has(r.obra));
-      const com = base.filter((r) => fechMap.get(r.obra).linhaViva > 0);
+      const obrasMes = new Set(rows.map((r) => r.obra));
+      const com = [...fechMap.entries()].filter(([obra, f]) => obrasMes.has(obra) && f.linhaViva > 0).map(([, f]) => f);
       const sup = CONFIG.SUP_FIXO;
       return `<div class="sup-card ${i % 2 ? 'alt' : ''}">
-          <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>${base.length} obras energizadas no fechamento</small></div></div>
+          <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>obras de outubro no fechamento · linha viva</small></div></div>
           <div class="sup-metrics">
-            ${metric('Obras linha viva', com.length, base.length, fmtInt, K.cyan)}
+            <div class="sup-metric">
+              <div class="sup-metric-head"><span>Obras linha viva</span></div>
+              <div class="sup-metric-val"><b>${fmtInt(com.length)}</b></div>
+            </div>
             <div class="sup-metric">
               <div class="sup-metric-head"><span>Faturamento linha viva</span></div>
-              <div class="sup-metric-val"><b>${fmtBRL(sum(com, (r) => fechMap.get(r.obra).linhaViva))}</b></div>
+              <div class="sup-metric-val"><b>${fmtBRL(sum(com, (f) => f.linhaViva))}</b></div>
             </div>
           </div>
         </div>`;
     };
     const isFixo = supFilter === CONFIG.SUP_FIXO;
     const entries = isFixo ? [] : [...bySup.entries()].sort((a, b) => b[1].length - a[1].length);
-    if (!supFilter || isFixo) entries.push([CONFIG.SUP_FIXO, null]);
+    if (!supFilter || isFixo) entries.unshift([CONFIG.SUP_FIXO, null]);
     supCount = entries.length;
     document.getElementById('sup-track').innerHTML = entries
       .map(([sup, list], i) => {
