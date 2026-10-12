@@ -140,7 +140,16 @@ const Charts = (() => {
     return list;
   };
 
-  // Modo 'tipo': tabela OBRA | TIPO PENDÊNCIA (uma linha por obra energizada)
+  // Modo 'tipo': tabela OBRA | TIPO PENDÊNCIA | DIAS ENERGIZADA (uma linha por obra energizada)
+  //   dias = hoje − data de energização (col. H do fechamento)
+  const DIA_MS = 86400000;
+  const diasDesde = (d) => {
+    if (!d) return null;
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+    return Math.max(Math.round((hoje - d) / DIA_MS), 0);
+  };
+
   const renderFechamentoTabela = (energizadas, fechMap) => {
     const linhas = energizadas
       .map((r) => {
@@ -149,10 +158,13 @@ const Charts = (() => {
         if (!f.pendencias.length) return { obra: r.obra, ordem: 1, html: `<span class="pend-ok">${SEM_PEND}</span>` };
         return { obra: r.obra, ordem: 0, html: f.pendencias.map((p) => `<span class="tag pend">${p}</span>`).join('') };
       })
-      .sort((a, b) => a.ordem - b.ordem || a.obra.localeCompare(b.obra));
+      .map((l) => ({ ...l, dias: diasDesde(fechMap.get(l.obra)?.energizacao) }))
+      .sort((a, b) => a.ordem - b.ordem || (b.dias ?? -1) - (a.dias ?? -1) || a.obra.localeCompare(b.obra));
+    const diasCell = (d) => (d == null ? '<span class="muted">—</span>' : `<span class="dias">${fmtInt(d)}</span>`);
     document.getElementById('fech-table').innerHTML =
-      linhas.map((l) => `<tr><td class="mono">${l.obra}</td><td><div class="pend-cell">${l.html}</div></td></tr>`).join('') ||
-      '<tr><td colspan="2" class="muted">Nenhuma obra energizada no filtro atual.</td></tr>';
+      linhas
+        .map((l) => `<tr><td class="mono">${l.obra}</td><td><div class="pend-cell">${l.html}</div></td><td class="num">${diasCell(l.dias)}</td></tr>`)
+        .join('') || '<tr><td colspan="3" class="muted">Nenhuma obra energizada no filtro atual.</td></tr>';
   };
 
   const renderFechamento = (rows, fechMap, mode = 'status') => {

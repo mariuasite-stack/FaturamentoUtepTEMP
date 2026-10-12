@@ -241,6 +241,8 @@ body {
 .pend-cell { display: flex; flex-wrap: wrap; gap: 4px; }
 .tag.pend { font-family: inherit; font-size: 11px; border-color: rgba(242, 117, 61, 0.35); background: rgba(242, 117, 61, 0.08); }
 .pend-ok { color: var(--cyan); font-weight: 600; }
+.data-table .num { text-align: right; white-space: nowrap; width: 1%; }
+.dias { font-weight: 700; font-variant-numeric: tabular-nums; }
 
 /* Postes por equipe */
 .legend-inline { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }

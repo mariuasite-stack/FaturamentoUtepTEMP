@@ -55,7 +55,8 @@ const Data = (() => {
       }));
   };
 
-  // Map obra -> { status (GEOEX, col. AJ), pendencias (col. AE, separadas por vírgula), linhaViva (col. AB) }
+  // Map obra -> { status (GEOEX, col. AJ), pendencias (col. AE, separadas por vírgula), linhaViva (col. AB),
+  //              energizacao (data da col. H) }
   const loadFechamento = async () => {
     const C = CONFIG.FECH;
     const rows = (await fetchCSV(CONFIG.URL_FECHAMENTO)).slice(CONFIG.FECH_SKIP);
@@ -66,10 +67,12 @@ const Data = (() => {
       const status = String(r[C.GEOEX] ?? '').trim();
       const pendencias = String(r[C.PENDENCIA] ?? '').split(',').map((x) => x.trim()).filter(Boolean);
       const linhaViva = parseBRL(r[C.LINHA_VIVA]);
+      const energizacao = parseDate(r[C.ENERGIZACAO]);
       const cur = map.get(k);
-      if (!cur) map.set(k, { status, pendencias, linhaViva });
+      if (!cur) map.set(k, { status, pendencias, linhaViva, energizacao });
       else {
         if (!cur.status && status) cur.status = status;
+        if (!cur.energizacao && energizacao) cur.energizacao = energizacao;
         cur.linhaViva += linhaViva;
         pendencias.forEach((x) => { if (!cur.pendencias.includes(x)) cur.pendencias.push(x); });
       }
