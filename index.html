@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/style.css?v=11" />
+  <link rel="stylesheet" href="css/style.css?v=12" />
 </head>
 <body>
   <div class="app">
@@ -57,14 +57,23 @@
           <h2>Obras em Fechamento</h2>
           <div class="head-actions">
             <span class="pill" id="fech-total">—</span>
-            <div class="seg" role="tablist" aria-label="Visão do fechamento">
+            <div class="seg" id="seg-fech" role="tablist" aria-label="Visão do fechamento">
               <button type="button" class="active" data-mode="status">Status</button>
               <button type="button" data-mode="pendencia">Pendência</button>
+              <button type="button" data-mode="tipo">Tipo Pendência</button>
             </div>
           </div>
         </div>
-        <div class="chart-box short"><canvas id="chart-fechamento"></canvas></div>
-        <div id="fech-list" class="tag-list"></div>
+        <div id="fech-chart-view">
+          <div class="chart-box short"><canvas id="chart-fechamento"></canvas></div>
+          <div id="fech-list" class="tag-list"></div>
+        </div>
+        <div id="fech-table-view" class="table-scroll" hidden>
+          <table class="data-table">
+            <thead><tr><th>Obra</th><th>Tipo Pendência</th></tr></thead>
+            <tbody id="fech-table"></tbody>
+          </table>
+        </div>
       </section>
     </div>
 
@@ -85,10 +94,16 @@
       </section>
       <section class="card">
         <div class="card-head">
-          <h2>Postes por Equipe</h2>
-          <div class="legend-inline">
-            <span><i class="dot" style="background:var(--cyan)"></i>Previsto</span>
-            <span><i class="dot" style="background:var(--orange)"></i>Executado</span>
+          <h2 id="postes-title">Postes por Equipe</h2>
+          <div class="head-actions">
+            <div class="legend-inline">
+              <span><i class="dot" style="background:var(--cyan)"></i><span id="postes-leg-prev">Previsto</span></span>
+              <span><i class="dot" style="background:var(--orange)"></i><span id="postes-leg-exec">Executado</span></span>
+            </div>
+            <div class="seg" id="seg-postes" role="tablist" aria-label="Visão de postes/obras">
+              <button type="button" class="active" data-mode="equipe">Equipe</button>
+              <button type="button" data-mode="supervisor">Supervisor</button>
+            </div>
           </div>
         </div>
         <div class="scroll-x">
@@ -102,9 +117,9 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <script src="js/config.js?v=11"></script>
-  <script src="js/data.js?v=11"></script>
-  <script src="js/charts.js?v=11"></script>
-  <script src="js/main.js?v=11"></script>
+  <script src="js/config.js?v=12"></script>
+  <script src="js/data.js?v=12"></script>
+  <script src="js/charts.js?v=12"></script>
+  <script src="js/main.js?v=12"></script>
 </body>
 </html>

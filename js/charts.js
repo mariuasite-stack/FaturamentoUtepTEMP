@@ -140,8 +140,28 @@ const Charts = (() => {
     return list;
   };
 
+  // Modo 'tipo': tabela OBRA | TIPO PENDÊNCIA (uma linha por obra energizada)
+  const renderFechamentoTabela = (energizadas, fechMap) => {
+    const linhas = energizadas
+      .map((r) => {
+        const f = fechMap.get(r.obra);
+        if (!f) return { obra: r.obra, ordem: 2, html: `<span class="muted">${NAO_ENC}</span>` };
+        if (!f.pendencias.length) return { obra: r.obra, ordem: 1, html: `<span class="pend-ok">${SEM_PEND}</span>` };
+        return { obra: r.obra, ordem: 0, html: f.pendencias.map((p) => `<span class="tag pend">${p}</span>`).join('') };
+      })
+      .sort((a, b) => a.ordem - b.ordem || a.obra.localeCompare(b.obra));
+    document.getElementById('fech-table').innerHTML =
+      linhas.map((l) => `<tr><td class="mono">${l.obra}</td><td><div class="pend-cell">${l.html}</div></td></tr>`).join('') ||
+      '<tr><td colspan="2" class="muted">Nenhuma obra energizada no filtro atual.</td></tr>';
+  };
+
   const renderFechamento = (rows, fechMap, mode = 'status') => {
     const energizadas = rows.filter((r) => r.energizada);
+    const isTabela = mode === 'tipo';
+    document.getElementById('fech-chart-view').hidden = isTabela;
+    document.getElementById('fech-table-view').hidden = !isTabela;
+    document.getElementById('fech-total').textContent = `${energizadas.length} energizadas`;
+    if (isTabela) return renderFechamentoTabela(energizadas, fechMap);
     const data = groupFechamento(energizadas, fechMap, mode);
     draw('chart-fechamento', {
       type: 'bar',
@@ -162,7 +182,6 @@ const Charts = (() => {
         },
       },
     });
-    document.getElementById('fech-total').textContent = `${energizadas.length} energizadas`;
     document.getElementById('fech-list').innerHTML =
       data
         .map((d) => (d.obras.length
@@ -288,16 +307,51 @@ const Charts = (() => {
     });
   };
 
-  // 6. Postes previsto x executado por encarregado (rolagem horizontal)
-  const renderPostes = (rows) => {
-    const byEnc = new Map();
+  // Rótulo de valor no topo de cada barra vertical
+  const barValues = {
+    id: 'barValues',
+    afterDatasetsDraw(chart) {
+      const { ctx } = chart;
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'bottom';
+      ctx.fillStyle = K.text;
+      ctx.font = "600 10px 'Inter', system-ui, sans-serif";
+      chart.data.datasets.forEach((ds, i) => {
+        const meta = chart.getDatasetMeta(i);
+        if (meta.hidden) return;
+        meta.data.forEach((bar, j) => ds.data[j] && ctx.fillText(fmtInt(ds.data[j]), bar.x, bar.y - 3));
+      });
+      ctx.restore();
+    },
+  };
+
+  // 6. Previsto x executado em barras (rolagem horizontal):
+  //    modo 'equipe' = postes por encarregado · modo 'supervisor' = obras previstas x energizadas
+  const POSTES_MODES = {
+    equipe: {
+      title: 'Postes por Equipe', prev: 'Previsto', exec: 'Executado', unit: 'postes',
+      key: (r) => r.encarregado, prev_: (r) => r.postePrev, exec_: (r) => r.posteExec,
+    },
+    supervisor: {
+      title: 'Obras por Supervisor', prev: 'Previstas', exec: 'Energizadas', unit: 'obras',
+      key: (r) => r.supervisor, prev_: () => 1, exec_: (r) => (r.energizada ? 1 : 0),
+    },
+  };
+
+  const renderPostes = (rows, mode = 'equipe') => {
+    const m = POSTES_MODES[mode];
+    document.getElementById('postes-title').textContent = m.title;
+    document.getElementById('postes-leg-prev').textContent = m.prev;
+    document.getElementById('postes-leg-exec').textContent = m.exec;
+    const byKey = new Map();
     rows.forEach((r) => {
-      const e = byEnc.get(r.encarregado) || { prev: 0, exec: 0 };
-      e.prev += r.postePrev;
-      e.exec += r.posteExec;
-      byEnc.set(r.encarregado, e);
+      const e = byKey.get(m.key(r)) || { prev: 0, exec: 0 };
+      e.prev += m.prev_(r);
+      e.exec += m.exec_(r);
+      byKey.set(m.key(r), e);
     });
-    const list = [...byEnc.entries()].sort((a, b) => b[1].prev - a[1].prev || b[1].exec - a[1].exec);
+    const list = [...byKey.entries()].sort((a, b) => b[1].prev - a[1].prev || b[1].exec - a[1].exec);
     const labels = list.map(([n]) => n.split(' ').slice(0, 2).join(' '));
     const inner = document.getElementById('postes-inner');
     inner.style.width = Math.max(list.length * 70, inner.parentElement.clientWidth) + 'px';
@@ -306,21 +360,24 @@ const Charts = (() => {
       data: {
         labels,
         datasets: [
-          { label: 'Poste previsto', data: list.map(([, v]) => v.prev), backgroundColor: K.cyan, borderRadius: 4, categoryPercentage: 0.7, barPercentage: 0.9 },
-          { label: 'Poste executado', data: list.map(([, v]) => v.exec), backgroundColor: K.orange, borderRadius: 4, categoryPercentage: 0.7, barPercentage: 0.9 },
+          { label: m.prev, data: list.map(([, v]) => v.prev), backgroundColor: K.cyan, borderRadius: 4, categoryPercentage: 0.7, barPercentage: 0.9 },
+          { label: m.exec, data: list.map(([, v]) => v.exec), backgroundColor: K.orange, borderRadius: 4, categoryPercentage: 0.7, barPercentage: 0.9 },
         ],
       },
+      plugins: [barValues],
       options: {
         maintainAspectRatio: false,
+        layout: { padding: { top: 16 } },
         scales: {
           x: { grid: { display: false }, ticks: { color: K.text, maxRotation: 50, minRotation: 50, autoSkip: false, font: { size: 10 } } },
-          y: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: K.grid } },
+          y: { beginAtZero: true, grace: '8%', ticks: { precision: 0 }, grid: { color: K.grid } },
         },
         plugins: {
           legend: { display: false },
           tooltip: {
             callbacks: {
               title: (items) => list[items[0].dataIndex][0],
+              label: (c) => ` ${c.dataset.label}: ${fmtInt(c.raw)} ${m.unit}`,
               footer: (items) => {
                 const v = list[items[0].dataIndex][1];
                 return `Execução: ${fmtPct(pct(v.exec, v.prev))}`;

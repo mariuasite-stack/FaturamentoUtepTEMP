@@ -3,7 +3,7 @@
   // Planilha é a programação de outubro: todas as obras contam para o mês,
   // inclusive as que iniciaram antes (ex.: setembro).
   const FILTERS = ['f-sup', 'f-utep'];
-  const state = { prog: [], fech: new Map(), fechMode: 'status' };
+  const state = { prog: [], fech: new Map(), fechMode: 'status', postesMode: 'equipe' };
   const $ = (id) => document.getElementById(id);
 
   const fillSelect = (el, values, labelFn = (v) => v) => {
@@ -33,7 +33,7 @@
     Charts.renderFechamento(rows, state.fech, state.fechMode);
     Charts.renderSupervisores(rows, state.fech, $('f-sup').value);
     Charts.renderUtep(rows);
-    Charts.renderPostes(rows);
+    Charts.renderPostes(rows, state.postesMode);
   };
 
   const load = async () => {
@@ -62,14 +62,19 @@
   });
   $('refresh').addEventListener('click', load);
 
-  // Alterna o gráfico de fechamento entre Status (col. AJ) e Pendência (col. AE)
-  document.querySelectorAll('.seg button').forEach((b) =>
-    b.addEventListener('click', () => {
-      state.fechMode = b.dataset.mode;
-      document.querySelectorAll('.seg button').forEach((x) => x.classList.toggle('active', x === b));
-      Charts.renderFechamento(filtered(), state.fech, state.fechMode);
-    })
-  );
+  // Abas segmentadas: liga os botões de um grupo a uma chave do estado
+  const bindSeg = (id, key, onChange) =>
+    document.querySelectorAll(`#${id} button`).forEach((b) =>
+      b.addEventListener('click', () => {
+        state[key] = b.dataset.mode;
+        document.querySelectorAll(`#${id} button`).forEach((x) => x.classList.toggle('active', x === b));
+        onChange();
+      })
+    );
+  // Fechamento: Status (col. AJ) · Pendência (col. AE) · Tipo Pendência (tabela)
+  bindSeg('seg-fech', 'fechMode', () => Charts.renderFechamento(filtered(), state.fech, state.fechMode));
+  // Barras: postes por equipe · obras por supervisor
+  bindSeg('seg-postes', 'postesMode', () => Charts.renderPostes(filtered(), state.postesMode));
 
   $('sup-prev').addEventListener('click', () => Charts.nextSupervisor(-1));
   $('sup-next').addEventListener('click', () => Charts.nextSupervisor(1));

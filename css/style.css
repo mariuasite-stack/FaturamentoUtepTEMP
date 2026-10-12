@@ -211,7 +211,7 @@ body {
 .sup-dots button.active { width: 22px; background: var(--cyan); }
 
 /* Toggle Status / Pendência */
-.head-actions { display: flex; align-items: center; gap: 10px; }
+.head-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
 .seg { display: inline-flex; background: var(--card-2); border: 1px solid var(--border); border-radius: 999px; padding: 3px; }
 .seg button {
   border: 0; background: transparent; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600;
@@ -219,6 +219,28 @@ body {
 }
 .seg button:hover { color: var(--text); }
 .seg button.active { background: var(--orange); color: #ffffff; }
+
+/* Fechamento — tabela Tipo Pendência */
+.table-scroll {
+  height: 328px; overflow-y: auto; border: 1px solid var(--border); border-radius: 10px;
+  scrollbar-color: var(--cyan) var(--card-2); scrollbar-width: thin;
+}
+.table-scroll::-webkit-scrollbar { width: 8px; }
+.table-scroll::-webkit-scrollbar-track { background: var(--card-2); border-radius: 999px; }
+.table-scroll::-webkit-scrollbar-thumb { background: linear-gradient(180deg, var(--cyan), var(--orange)); border-radius: 999px; }
+.data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.data-table th {
+  position: sticky; top: 0; z-index: 1; background: var(--card-2); text-align: left;
+  font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted);
+  padding: 9px 12px; border-bottom: 1px solid var(--border);
+}
+.data-table td { padding: 8px 12px; border-bottom: 1px solid var(--border); vertical-align: top; }
+.data-table tbody tr:nth-child(even) { background: rgba(15, 23, 42, 0.02); }
+.data-table tbody tr:hover { background: rgba(5, 155, 155, 0.06); }
+.data-table td.mono { font-family: ui-monospace, Consolas, monospace; font-weight: 600; white-space: nowrap; width: 1%; }
+.pend-cell { display: flex; flex-wrap: wrap; gap: 4px; }
+.tag.pend { font-family: inherit; font-size: 11px; border-color: rgba(242, 117, 61, 0.35); background: rgba(242, 117, 61, 0.08); }
+.pend-ok { color: var(--cyan); font-weight: 600; }
 
 /* Postes por equipe */
 .legend-inline { display: flex; gap: 14px; font-size: 12px; color: var(--muted); }
