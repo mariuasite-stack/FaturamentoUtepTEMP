@@ -12,8 +12,11 @@ const CONFIG = {
   // pois o layout varia entre os meses
   PROG: {
     ENCARREGADO: 'ENCARREGADOS', SUPERVISOR: 'SUPERVISOR', OBRA: 'PEP OBRA', VALOR: 'VALOR DE SERVIÇO', UTEP: 'UTEP',
-    ANOTACOES: 'ANOTAÇÕES', POSTE_PREV: 'POSTE PREV', INICIO: 'INICIO', TERMINO: 'TERMINO', POSTE_EXEC: 'POSTE EXEC',
+    ANOTACOES: 'ANOTAÇÕES', POSTE_PREV: 'POSTE PREV', INICIO: 'INICIO', TERMINO: 'TERMINO', POSTE_EXEC: 'POSTE EXEC', AVNP: 'AVNP',
   },
+
+  // Obras com AVNP (%) até este limite contam no mês da coluna TERMINO, não no mês da planilha
+  AVNP_LIMITE_MES_TERMINO: 50,
 
   // Fechamento: pula 1 linha, a 2ª é header
   FECH_SKIP: 2,

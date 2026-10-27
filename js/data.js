@@ -60,6 +60,8 @@ const Data = (() => {
         posteExec: num(r[C.POSTE_EXEC]),
         inicio: parseDate(r[C.INICIO]),
         termino: parseDate(r[C.TERMINO]),
+        // "20,00%" -> 20; vazio = obra liberada (100)
+        avnp: String(r[C.AVNP] ?? '').trim() ? num(String(r[C.AVNP]).replace('%', '')) : 100,
       }));
   };
 
