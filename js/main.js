@@ -25,10 +25,13 @@
         if (!(r.avnp <= CONFIG.AVNP_LIMITE_MES_TERMINO && r.termino)) return add(key, r);
         const destino = ymKey(r.termino);
         const cur = moveis.get(r.obra);
-        if (!cur || cur.key !== destino) moveis.set(r.obra, { key, row: r });
+        // Valor de serviço de outra planilha, caso a linha escolhida esteja sem valor
+        const valor = (cur && cur.valor) || r.valor;
+        if (!cur || cur.key !== destino) moveis.set(r.obra, { key, row: r, valor });
+        else cur.valor = cur.valor || valor;
       })
     );
-    moveis.forEach(({ row }) => add(ymKey(row.termino), row));
+    moveis.forEach(({ row, valor }) => add(ymKey(row.termino), { ...row, valor: row.valor || valor }));
     return porMes;
   };
 
