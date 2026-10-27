@@ -1,13 +1,19 @@
 // Fontes de dados e mapeamento de colunas (índice 0 = coluna A)
 const CONFIG = {
-  URL_PROGRAMACAO:
-    'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlhIPA8O1KpDFQzgwrEyiMf6zLNKqVop_blp-6lyKiYibbMqZ6rbdc0QNS1AZcO73_5PfWkFdXaD_Q/pub?gid=181484497&single=true&output=csv',
+  // Programação por mês (key = ano-mês, usado para abrir no mês atual)
+  MESES: [
+    { key: '2026-10', label: 'Outubro/2026', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlhIPA8O1KpDFQzgwrEyiMf6zLNKqVop_blp-6lyKiYibbMqZ6rbdc0QNS1AZcO73_5PfWkFdXaD_Q/pub?gid=181484497&single=true&output=csv' },
+    { key: '2026-11', label: 'Novembro/2026', url: 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSlhIPA8O1KpDFQzgwrEyiMf6zLNKqVop_blp-6lyKiYibbMqZ6rbdc0QNS1AZcO73_5PfWkFdXaD_Q/pub?gid=1964527868&single=true&output=csv' },
+  ],
   URL_FECHAMENTO:
     'https://docs.google.com/spreadsheets/d/e/2PACX-1vTqkRBosgI-zjU5oDHXwfY8mnecmI0FditEuXB7BKEIdKObFOyCeD6eatHc1kBwSg/pub?gid=14471879&single=true&output=csv',
 
-  // Programação: pula 2 linhas, a 3ª é header
-  PROG_SKIP: 3,
-  PROG: { ENCARREGADO: 0, SUPERVISOR: 1, OBRA: 2, VALOR: 5, UTEP: 7, ANOTACOES: 9, POSTE_PREV: 10, INICIO: 11, TERMINO: 12, POSTE_EXEC: 20 },
+  // Programação: colunas localizadas pelo nome no header (linha que contém PEP OBRA),
+  // pois o layout varia entre os meses
+  PROG: {
+    ENCARREGADO: 'ENCARREGADOS', SUPERVISOR: 'SUPERVISOR', OBRA: 'PEP OBRA', VALOR: 'VALOR DE SERVIÇO', UTEP: 'UTEP',
+    ANOTACOES: 'ANOTAÇÕES', POSTE_PREV: 'POSTE PREV', INICIO: 'INICIO', TERMINO: 'TERMINO', POSTE_EXEC: 'POSTE EXEC',
+  },
 
   // Fechamento: pula 1 linha, a 2ª é header
   FECH_SKIP: 2,

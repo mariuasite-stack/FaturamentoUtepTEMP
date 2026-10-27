@@ -22,7 +22,7 @@
         </div>
       </div>
       <div class="filters">
-        <label>Mês<span class="month-fixed">Outubro/2026</span></label>
+        <label>Mês<select id="f-mes"></select></label>
         <label>Supervisor<select id="f-sup"><option value="">Todos</option></select></label>
         <label>UTEP<select id="f-utep"><option value="">Todos</option></select></label>
         <button id="f-clear" class="btn ghost" title="Limpar filtros">Limpar</button>
@@ -65,7 +65,7 @@
           </div>
         </div>
         <div id="fech-chart-view">
-          <div class="chart-box short"><canvas id="chart-fechamento"></canvas></div>
+          <div class="scroll-y"><div class="chart-box short" id="fech-box"><canvas id="chart-fechamento"></canvas></div></div>
           <div id="fech-list" class="tag-list"></div>
         </div>
         <div id="fech-table-view" class="table-scroll" hidden>

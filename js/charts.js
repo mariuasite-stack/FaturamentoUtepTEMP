@@ -175,6 +175,11 @@ const Charts = (() => {
     document.getElementById('fech-total').textContent = `${energizadas.length} energizadas`;
     if (isTabela) return renderFechamentoTabela(energizadas, fechMap);
     const data = groupFechamento(energizadas, fechMap, mode);
+    // ~30px por barra: acima da altura do card a área rola na vertical em vez de espremer os rótulos
+    const box = document.getElementById('fech-box');
+    box.style.height = `${Math.max(220, data.length * 30 + 30)}px`;
+    box.parentElement.scrollTop = 0;
+    const curto = (s) => (s.length > 26 ? s.slice(0, 25) + '…' : s);
     draw('chart-fechamento', {
       type: 'bar',
       data: {
@@ -186,11 +191,11 @@ const Charts = (() => {
         maintainAspectRatio: false,
         scales: {
           x: { beginAtZero: true, ticks: { precision: 0 }, grid: { color: K.grid } },
-          y: { grid: { display: false }, ticks: { color: K.text, font: { weight: 600 } } },
+          y: { grid: { display: false }, ticks: { color: K.text, font: { weight: 600 }, autoSkip: false, callback: (v) => curto(data[v].label) } },
         },
         plugins: {
           legend: { display: false },
-          tooltip: { callbacks: { label: (c) => ` ${c.raw} obras`, afterLabel: (c) => data[c.dataIndex].obras.slice(0, 12).join('\n') } },
+          tooltip: { callbacks: { title: (c) => data[c[0].dataIndex].label, label: (c) => ` ${c.raw} obras`, afterLabel: (c) => data[c.dataIndex].obras.slice(0, 12).join('\n') } },
         },
       },
     });
@@ -228,13 +233,13 @@ const Charts = (() => {
         <div class="mini-bar"><div style="width:${Math.min(p, 100)}%;background:${color}"></div></div>
       </div>`;
     };
-    // Supervisor fixo: obras da programação de outubro que constam no fechamento com linha viva (coluna AB) > 0
+    // Supervisor fixo: obras da programação do mês que constam no fechamento com linha viva (coluna AB) > 0
     const ircCard = (i) => {
       const obrasMes = new Set(rows.map((r) => r.obra));
       const com = [...fechMap.entries()].filter(([obra, f]) => obrasMes.has(obra) && f.linhaViva > 0).map(([, f]) => f);
       const sup = CONFIG.SUP_FIXO;
       return `<div class="sup-card ${i % 2 ? 'alt' : ''}">
-          <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>obras de outubro no fechamento · linha viva</small></div></div>
+          <div class="sup-name"><span class="avatar">${sup.charAt(0)}</span><div><b>${sup}</b><small>obras do mês no fechamento · linha viva</small></div></div>
           <div class="sup-metrics">
             <div class="sup-metric">
               <div class="sup-metric-head"><span>Obras linha viva</span></div>

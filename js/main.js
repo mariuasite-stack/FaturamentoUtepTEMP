@@ -1,10 +1,19 @@
 // Orquestração: carga, filtros e renderização
 (() => {
-  // Planilha é a programação de outubro: todas as obras contam para o mês,
-  // inclusive as que iniciaram antes (ex.: setembro).
+  // Planilha é a programação do mês selecionado: todas as obras contam para o mês,
+  // inclusive as que iniciaram antes do mês.
   const FILTERS = ['f-sup', 'f-utep'];
   const state = { prog: [], fech: new Map(), fechMode: 'status', postesMode: 'equipe' };
   const $ = (id) => document.getElementById(id);
+
+  // Mês: abre no mês atual (ano-mês de hoje) ou, se não existir, no último cadastrado
+  const buildMeses = () => {
+    const d = new Date();
+    const hoje = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+    $('f-mes').innerHTML = CONFIG.MESES.map((m) => `<option value="${m.key}">${m.label}</option>`).join('');
+    $('f-mes').value = (CONFIG.MESES.find((m) => m.key === hoje) || CONFIG.MESES[CONFIG.MESES.length - 1]).key;
+  };
+  const mesAtual = () => CONFIG.MESES.find((m) => m.key === $('f-mes').value);
 
   const fillSelect = (el, values, labelFn = (v) => v) => {
     const current = el.value;
@@ -40,7 +49,7 @@
     document.body.classList.add('loading');
     $('error').hidden = true;
     try {
-      const [prog, fech] = await Promise.all([Data.loadProgramacao(), Data.loadFechamento()]);
+      const [prog, fech] = await Promise.all([Data.loadProgramacao(mesAtual().url), Data.loadFechamento()]);
       state.prog = prog;
       state.fech = fech;
       buildFilters();
@@ -61,6 +70,7 @@
     render();
   });
   $('refresh').addEventListener('click', load);
+  $('f-mes').addEventListener('change', load);
 
   // Abas segmentadas: liga os botões de um grupo a uma chave do estado
   const bindSeg = (id, key, onChange) =>
@@ -83,5 +93,6 @@
     if (e.key === 'ArrowLeft') Charts.nextSupervisor(-1);
     if (e.key === 'ArrowRight') Charts.nextSupervisor(1);
   });
+  buildMeses();
   load();
 })();

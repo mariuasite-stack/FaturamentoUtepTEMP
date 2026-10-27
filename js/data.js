@@ -36,9 +36,17 @@ const Data = (() => {
     return Papa.parse(text, { skipEmptyLines: false }).data;
   };
 
-  const loadProgramacao = async () => {
-    const C = CONFIG.PROG;
-    const rows = (await fetchCSV(CONFIG.URL_PROGRAMACAO)).slice(CONFIG.PROG_SKIP);
+  const loadProgramacao = async (url) => {
+    const all = await fetchCSV(url);
+    const h = all.findIndex((r) => r.some((c) => normKey(c) === normKey(CONFIG.PROG.OBRA)));
+    if (h < 0) throw new Error(`Header "${CONFIG.PROG.OBRA}" não encontrado na programação`);
+    const header = all[h].map(normKey);
+    const C = {};
+    Object.entries(CONFIG.PROG).forEach(([k, name]) => {
+      C[k] = header.indexOf(normKey(name));
+      if (C[k] < 0) throw new Error(`Coluna "${name}" não encontrada na programação`);
+    });
+    const rows = all.slice(h + 1);
     return rows
       .filter((r) => r[C.OBRA] && r[C.OBRA].trim())
       .map((r) => ({
